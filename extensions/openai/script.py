@@ -369,7 +369,7 @@ class Handler(BaseHTTPRequestHandler):
 
             else:
                 # Text Completions
-                stream_object_type = 'text_completions.chunk'
+                stream_object_type = 'text_completion.chunk'
                 object_type = 'text_completion'
 
                 # ... encoded as a string, array of strings, array of tokens, or array of token arrays.
@@ -422,7 +422,8 @@ class Handler(BaseHTTPRequestHandler):
 
                 response = 'data: ' + json.dumps(chunk) + '\r\n\r\n'
 
-                chunk_size = hex(len(response))[2:]  # Convert length to hexadecimal string
+                # Convert length to hexadecimal string
+                chunk_size = hex(len(response))[2:]  
                 chunked_response = chunk_size + '\r\n' + response + '\r\n'
 
                 self.wfile.write(chunked_response.encode('utf-8'))
@@ -507,11 +508,10 @@ class Handler(BaseHTTPRequestHandler):
                     completion_token_count += len(encode(new_content)[0])
 
             if req_params['stream']:
-                # If we've reached this point, we've reached the end of the tokens
+                # If we've reached this point, we've printed all of the tokens
                 response = '\ndata: [DONE]\n\r\n\r\n'
                 self.wfile.write(response.encode('utf-8'))
 
-                #chunk_size = hex(len(response))[2:]  # Convert length to hexadecimal string
                 chunked_response = "0" + '\r\n' + response + '\r\n'
                 # Terminate chunked encoding
                 self.wfile.write(chunked_response.encode('utf-8'))
