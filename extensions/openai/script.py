@@ -269,6 +269,8 @@ class Handler(BaseHTTPRequestHandler):
 
             self.send_response(200)
             if req_params['stream']:
+                self.send_header('Content-Type', 'text/event-stream')
+                self.send_header('Cache-Control', 'no-cache')
                 self.send_header("Access-Control-Allow-Origin", "*")
                 self.send_header("Access-Control-Allow-Credentials", "true")
                 self.send_header(
