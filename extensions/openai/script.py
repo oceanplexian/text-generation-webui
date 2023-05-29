@@ -16,7 +16,8 @@ params = {
     'port': int(os.environ.get('OPENEDAI_PORT')) if 'OPENEDAI_PORT' in os.environ else 5001,
 }
 
-debug = True if 'OPENEDAI_DEBUG' in os.environ else False
+#debug = True if 'OPENEDAI_DEBUG' in os.environ else False
+debug = True
 
 # Optional, install the module and download the model to enable
 # v1/embeddings
@@ -91,7 +92,27 @@ def float_list_to_base64(float_list):
 
 
 class Handler(BaseHTTPRequestHandler):
+    protocol_version = 'HTTP/1.1'
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Credentials", "true")
+        self.send_header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT")
+        self.send_header("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization")
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        response = json.dumps({
+            "response": 0,
+        })
+        self.wfile.write(response.encode('utf-8'))
+
     def do_GET(self):
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Credentials", "true")
+        self.send_header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT")
+        self.send_header("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization")
+        self.send_header('Content-Type', 'application/json')
+
         if self.path.startswith('/v1/models'):
 
             self.send_response(200)
@@ -172,7 +193,7 @@ class Handler(BaseHTTPRequestHandler):
 
             # XXX model is ignored for now
             # model = body.get('model', shared.model_name) # ignored, use existing for now
-            model = shared.model_name
+            model = "gpt-3.5-turbo"
             created_time = int(time.time())
 
             cmpl_id = "chatcmpl-%d" % (created_time) if is_chat else "conv-%d" % (created_time)
@@ -237,11 +258,17 @@ class Handler(BaseHTTPRequestHandler):
 
             self.send_response(200)
             if req_params['stream']:
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.send_header("Access-Control-Allow-Credentials", "true")
+                self.send_header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT")
+                self.send_header("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization")
                 self.send_header('Content-Type', 'text/event-stream')
                 self.send_header('Cache-Control', 'no-cache')
+                #self.send_header('Transfer-Encoding', 'chunked')
                 # self.send_header('Connection', 'keep-alive')
             else:
                 self.send_header('Content-Type', 'application/json')
+
             self.end_headers()
 
             token_count = 0
@@ -252,8 +279,8 @@ class Handler(BaseHTTPRequestHandler):
 
             if is_chat:
                 # Chat Completions
-                stream_object_type = 'chat.completions.chunk'
-                object_type = 'chat.completions'
+                stream_object_type = 'chat.completion.chunk'
+                object_type = 'chat.completion'
 
                 messages = body['messages']
 
@@ -295,7 +322,7 @@ class Handler(BaseHTTPRequestHandler):
                 chat_msgs = []
 
                 # You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible. Knowledge cutoff: {knowledge_cutoff} Current date: {current_date}
-                context_msg = role_formats['system'].format(message=role_formats['context']) if role_formats['context'] else ''
+                context_msg = role_formats['system'].format(message=role_formats['context']) if role_formats['context'] else ' '
                 if context_msg:
                     system_msgs.extend([context_msg])
 
@@ -305,6 +332,8 @@ class Handler(BaseHTTPRequestHandler):
                     system_msgs.extend([prompt_msg])
 
                 for m in messages:
+                    print("for m in messages")
+                    print(m)
                     role = m['role']
                     content = m['content']
                     msg = role_formats[role].format(message=content)
@@ -314,6 +343,7 @@ class Handler(BaseHTTPRequestHandler):
                         chat_msgs.extend([msg])
 
                 # can't really truncate the system messages
+                print(system_msgs)
                 system_msg = '\n'.join(system_msgs)
                 if system_msg[-1] != '\n':
                     system_msg = system_msg + '\n'
@@ -375,7 +405,7 @@ class Handler(BaseHTTPRequestHandler):
                     "id": cmpl_id,
                     "object": stream_object_type,
                     "created": created_time,
-                    "model": shared.model_name,
+                    "model": "gpt-3.5-turbo",
                     resp_list: [{
                         "index": 0,
                         "finish_reason": None,
@@ -389,8 +419,12 @@ class Handler(BaseHTTPRequestHandler):
                     chunk[resp_list][0]["message"] = {'role': 'assistant', 'content': ''}
                     chunk[resp_list][0]["delta"] = {'role': 'assistant', 'content': ''}
 
-                response = 'data: ' + json.dumps(chunk) + '\n'
-                self.wfile.write(response.encode('utf-8'))
+                response = 'data: ' + json.dumps(chunk) + '\r\n\r\n'
+
+                chunk_size = hex(len(response))[2:]  # Convert length to hexadecimal string
+                chunked_response = chunk_size + '\r\n' + response + '\r\n'
+
+                self.wfile.write(chunked_response.encode('utf-8'))
 
             # generate reply #######################################
             if debug:
@@ -445,7 +479,7 @@ class Handler(BaseHTTPRequestHandler):
                         "id": cmpl_id,
                         "object": stream_object_type,
                         "created": created_time,
-                        "model": shared.model_name,
+                        "model": "gpt-3.5-turbo",
                         resp_list: [{
                             "index": 0,
                             "finish_reason": None,
@@ -462,8 +496,13 @@ class Handler(BaseHTTPRequestHandler):
                         # So yeah... do both methods? delta and messages.
                         chunk[resp_list][0]['message'] = {'content': new_content}
                         chunk[resp_list][0]['delta'] = {'content': new_content}
-                    response = 'data: ' + json.dumps(chunk) + '\n'
-                    self.wfile.write(response.encode('utf-8'))
+
+                    response = 'data: ' + json.dumps(chunk) + '\r\n'
+
+                    chunk_size = hex(len(response))[2:]  # Convert length to hexadecimal string
+                    chunked_response = chunk_size + '\r\n' + response + '\r\n\r\n'
+                    # Return empty response twice
+                    self.wfile.write(chunked_response.encode('utf-8'))
                     completion_token_count += len(encode(new_content)[0])
 
             if req_params['stream']:
@@ -488,8 +527,19 @@ class Handler(BaseHTTPRequestHandler):
                     # So yeah... do both methods? delta and messages.
                     chunk[resp_list][0]['message'] = {'content': ''}
                     chunk[resp_list][0]['delta'] = {}
-                response = 'data: ' + json.dumps(chunk) + '\ndata: [DONE]\n'
+                #response = 'data: ' + json.dumps(chunk) + '\ndata: [DONE]\n\r\n\r\n'
+                response = '\ndata: [DONE]\n\r\n\r\n'
+
                 self.wfile.write(response.encode('utf-8'))
+
+                response = ''
+
+                chunk_size = hex(len(response))[2:]  # Convert length to hexadecimal string
+                chunked_response = chunk_size + '\r\n' + response + '\r\n'
+                # Terminate chunked encoding
+                self.wfile.write(chunked_response.encode('utf-8'))
+                self.wfile.write(chunked_response.encode('utf-8'))
+
                 # Finished if streaming.
                 if debug:
                     if answer and answer[0] == ' ':
