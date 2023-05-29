@@ -529,11 +529,10 @@ class Handler(BaseHTTPRequestHandler):
                     chunk[resp_list][0]['message'] = {'content': ''}
                     chunk[resp_list][0]['delta'] = {}
                 #response = 'data: ' + json.dumps(chunk) + '\ndata: [DONE]\n\r\n\r\n'
-                response = '\ndata: [DONE]\n\r\n\r\n'
+                response = 'data: ' + json.dumps(chunk) + '\ndata: [DONE]\n\r\n\r\n'
+                #response = '\ndata: [DONE]\n\r\n\r\n'
 
                 self.wfile.write(response.encode('utf-8'))
-
-                response = ''
 
                 chunk_size = hex(len(response))[2:]  # Convert length to hexadecimal string
                 chunked_response = chunk_size + '\r\n' + response + '\r\n'
