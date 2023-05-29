@@ -362,15 +362,24 @@ class Handler(BaseHTTPRequestHandler):
                 system_msg = '\n'.join(system_msgs)
                 
                 # Don't crash on empty system message
-                if not system_msg: 
+                if not system_msg:
                     system_msg = '\n'
                 else:
                     if system_msg[-1] != '\n':
                         system_msg = system_msg + '\n'
 
-                system_token_count = len(encode(system_msg)[0])
-                remaining_tokens = req_params['truncation_length'] - system_token_count
-                chat_msg = ''
+                if system_msg is not None:
+                    encoded_system_msg = encode(system_msg)
+                    if encoded_system_msg is not None:
+                        system_token_count = len(encoded_system_msg[0])
+                        remaining_tokens = req_params['truncation_length'] - system_token_count
+                        chat_msg = ''
+                    else:
+                        # Handle encoding error
+                        chat_msg = 'Error: Failed to encode system message'
+                else:
+                    # Handle empty system message
+                    chat_msg = 'Error: Empty system message'
 
                 while chat_msgs:
                     new_msg = chat_msgs.pop()
