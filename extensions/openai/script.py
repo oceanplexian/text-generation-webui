@@ -321,7 +321,7 @@ class Handler(BaseHTTPRequestHandler):
                 chat_msgs = []
 
                 # You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible. Knowledge cutoff: {knowledge_cutoff} Current date: {current_date}
-                context_msg = role_formats['system'].format(message=role_formats['context']) if role_formats['context'] else ' '
+                context_msg = role_formats['system'].format(message=role_formats['context']) if role_formats['context'] else ''
                 if context_msg:
                     system_msgs.extend([context_msg])
 
@@ -331,8 +331,6 @@ class Handler(BaseHTTPRequestHandler):
                     system_msgs.extend([prompt_msg])
 
                 for m in messages:
-                    print("for m in messages")
-                    print(m)
                     role = m['role']
                     content = m['content']
                     msg = role_formats[role].format(message=content)
@@ -342,10 +340,14 @@ class Handler(BaseHTTPRequestHandler):
                         chat_msgs.extend([msg])
 
                 # can't really truncate the system messages
-                print(system_msgs)
                 system_msg = '\n'.join(system_msgs)
-                if system_msg[-1] != '\n':
-                    system_msg = system_msg + '\n'
+                
+                # Don't crash on empty system message
+                if not system_msg: 
+                    system_msg = '\n'
+                else:
+                    if system_msg[-1] != '\n':
+                        system_msg = system_msg + '\n'
 
                 system_token_count = len(encode(system_msg)[0])
                 remaining_tokens = req_params['truncation_length'] - system_token_count
