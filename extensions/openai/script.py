@@ -279,7 +279,7 @@ class Handler(BaseHTTPRequestHandler):
             if is_chat:
                 # Chat Completions
                 stream_object_type = 'chat.completions.chunk'
-                object_type = 'chat.completion'
+                object_type = 'chat.completions'
 
                 messages = body['messages']
 
