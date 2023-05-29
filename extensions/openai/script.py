@@ -507,35 +507,12 @@ class Handler(BaseHTTPRequestHandler):
                     completion_token_count += len(encode(new_content)[0])
 
             if req_params['stream']:
-                chunk = {
-                    "id": cmpl_id,
-                    "object": stream_object_type,
-                    "created": created_time,
-                    "model": model,  # TODO: add Lora info?
-                    resp_list: [{
-                        "index": 0,
-                        "finish_reason": "stop",
-                    }],
-                    "usage": {
-                        "prompt_tokens": token_count,
-                        "completion_tokens": completion_token_count,
-                        "total_tokens": token_count + completion_token_count
-                    }
-                }
-                if stream_object_type == 'text_completion.chunk':
-                    chunk[resp_list][0]['text'] = ''
-                else:
-                    # So yeah... do both methods? delta and messages.
-                    chunk[resp_list][0]['message'] = {'content': ''}
-                    chunk[resp_list][0]['delta'] = {}
-                #response = 'data: ' + json.dumps(chunk) + '\ndata: [DONE]\n\r\n\r\n'
-                response = 'data: ' + json.dumps(chunk) + '\ndata: [DONE]\n\r\n\r\n'
-                #response = '\ndata: [DONE]\n\r\n\r\n'
-
+                # If we've reached this point, we've reached the end of the tokens
+                response = '\ndata: [DONE]\n\r\n\r\n'
                 self.wfile.write(response.encode('utf-8'))
 
-                chunk_size = hex(len(response))[2:]  # Convert length to hexadecimal string
-                chunked_response = chunk_size + '\r\n' + response + '\r\n'
+                #chunk_size = hex(len(response))[2:]  # Convert length to hexadecimal string
+                chunked_response = "0" + '\r\n' + response + '\r\n'
                 # Terminate chunked encoding
                 self.wfile.write(chunked_response.encode('utf-8'))
                 self.wfile.write(chunked_response.encode('utf-8'))
