@@ -193,7 +193,7 @@ class Handler(BaseHTTPRequestHandler):
 
             # XXX model is ignored for now
             # model = body.get('model', shared.model_name) # ignored, use existing for now
-            model = "gpt-3.5-turbo"
+            model = shared.model_name
             created_time = int(time.time())
 
             cmpl_id = "chatcmpl-%d" % (created_time) if is_chat else "conv-%d" % (created_time)
@@ -264,7 +264,6 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization")
                 self.send_header('Content-Type', 'text/event-stream')
                 self.send_header('Cache-Control', 'no-cache')
-                #self.send_header('Transfer-Encoding', 'chunked')
                 # self.send_header('Connection', 'keep-alive')
             else:
                 self.send_header('Content-Type', 'application/json')
@@ -279,7 +278,7 @@ class Handler(BaseHTTPRequestHandler):
 
             if is_chat:
                 # Chat Completions
-                stream_object_type = 'chat.completion.chunk'
+                stream_object_type = 'chat.completions.chunk'
                 object_type = 'chat.completion'
 
                 messages = body['messages']
@@ -368,7 +367,7 @@ class Handler(BaseHTTPRequestHandler):
 
             else:
                 # Text Completions
-                stream_object_type = 'text_completion.chunk'
+                stream_object_type = 'text_completions.chunk'
                 object_type = 'text_completion'
 
                 # ... encoded as a string, array of strings, array of tokens, or array of token arrays.
@@ -405,7 +404,7 @@ class Handler(BaseHTTPRequestHandler):
                     "id": cmpl_id,
                     "object": stream_object_type,
                     "created": created_time,
-                    "model": "gpt-3.5-turbo",
+                    "model": shared.model_name,
                     resp_list: [{
                         "index": 0,
                         "finish_reason": None,
@@ -479,7 +478,7 @@ class Handler(BaseHTTPRequestHandler):
                         "id": cmpl_id,
                         "object": stream_object_type,
                         "created": created_time,
-                        "model": "gpt-3.5-turbo",
+                        "model": shared.model_name,
                         resp_list: [{
                             "index": 0,
                             "finish_reason": None,
