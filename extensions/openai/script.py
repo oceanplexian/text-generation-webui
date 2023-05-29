@@ -96,22 +96,34 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Credentials", "true")
-        self.send_header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT")
-        self.send_header("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization")
+        self.send_header(
+            "Access-Control-Allow-Methods",
+            "GET,HEAD,OPTIONS,POST,PUT"
+        )
+        self.send_header(
+            "Access-Control-Allow-Headers",
+            "Origin, Accept, X-Requested-With, Content-Type, "
+            "Access-Control-Request-Method, Access-Control-Request-Headers, "
+            "Authorization"
+        )
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
-        response = json.dumps({
-            "response": 0,
-        })
-        self.wfile.write(response.encode('utf-8'))
+        self.wfile.write("OK".encode('utf-8'))
 
     def do_GET(self):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Credentials", "true")
-        self.send_header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT")
-        self.send_header("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization")
-        self.send_header('Content-Type', 'application/json')
-
+        self.send_header(
+            "Access-Control-Allow-Methods",
+            "GET,HEAD,OPTIONS,POST,PUT"
+        )
+        self.send_header(
+            "Access-Control-Allow-Headers",
+            "Origin, Accept, X-Requested-With, Content-Type, "
+            "Access-Control-Request-Method, Access-Control-Request-Headers, "
+            "Authorization"
+        )
+        
         if self.path.startswith('/v1/models'):
 
             self.send_response(200)
@@ -259,10 +271,16 @@ class Handler(BaseHTTPRequestHandler):
             if req_params['stream']:
                 self.send_header("Access-Control-Allow-Origin", "*")
                 self.send_header("Access-Control-Allow-Credentials", "true")
-                self.send_header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT")
-                self.send_header("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization")
-                self.send_header('Content-Type', 'text/event-stream')
-                self.send_header('Cache-Control', 'no-cache')
+                self.send_header(
+                   "Access-Control-Allow-Methods",
+                   "GET,HEAD,OPTIONS,POST,PUT"
+                 )
+                self.send_header(
+                    "Access-Control-Allow-Headers",
+                    "Origin, Accept, X-Requested-With, Content-Type, "
+                    "Access-Control-Request-Method, Access-Control-Request-Headers, "
+                    "Authorization"
+                )
                 # self.send_header('Connection', 'keep-alive')
             else:
                 self.send_header('Content-Type', 'application/json')
