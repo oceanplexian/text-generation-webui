@@ -16,8 +16,7 @@ params = {
     'port': int(os.environ.get('OPENEDAI_PORT')) if 'OPENEDAI_PORT' in os.environ else 5001,
 }
 
-#debug = True if 'OPENEDAI_DEBUG' in os.environ else False
-debug = True
+debug = True if 'OPENEDAI_DEBUG' in os.environ else False
 
 # Optional, install the module and download the model to enable
 # v1/embeddings
@@ -514,7 +513,6 @@ class Handler(BaseHTTPRequestHandler):
 
                 chunked_response = "0" + '\r\n' + response + '\r\n'
                 # Terminate chunked encoding
-                self.wfile.write(chunked_response.encode('utf-8'))
                 self.wfile.write(chunked_response.encode('utf-8'))
 
                 # Finished if streaming.
